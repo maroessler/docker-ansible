@@ -12,8 +12,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  # This workflow contains a single job called "check_and_update"
+  check_and_update:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -35,7 +35,15 @@ jobs:
       - name: Commit latest release version
         if: steps.git-check.outputs.modified == 'true'
         run: |
-          git config --global user.name 'Michael Roessler'
-          git config --global user.email 'maroessler@aol.com'
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
           git commit -am "New release version: $(cat VERSION)"
           git push
+
+      - name: Repository Dispatch
+        if: steps.git-check.outputs.modified == 'true'
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: maroessler/docker-ansible
+          event-type: trigger_build
